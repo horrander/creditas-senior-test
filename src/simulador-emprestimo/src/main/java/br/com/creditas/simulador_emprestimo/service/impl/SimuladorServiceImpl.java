@@ -58,6 +58,8 @@ public class SimuladorServiceImpl implements SimuladorService {
      */
     private int obterIdadeCliente(String cpfCliente) {
 
+        log.info("Obtendo idade do cliente com CPF: {}", cpfCliente);
+
         var cliente = clienteService.buscarClientePorCpf(cpfCliente);
 
         log.info("Cliente encontrado: {}", cliente);
