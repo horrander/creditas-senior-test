@@ -1,0 +1,14 @@
+{
+  "configurations": [
+    {
+      "type": "java",
+      "name": "Spring Boot-SimuladorEmprestimoApplication<simulador-emprestimo>",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "mainClass": "br.com.creditas.simulador_emprestimo.SimuladorEmprestimoApplication",
+      "projectName": "simulador-emprestimo",
+      "args": "",
+      "envFile": "${workspaceFolder}/.env"
+    }
+  ]
+}
