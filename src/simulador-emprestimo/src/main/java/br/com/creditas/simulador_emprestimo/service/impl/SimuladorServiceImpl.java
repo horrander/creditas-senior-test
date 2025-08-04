@@ -1,75 +1,70 @@
 package br.com.creditas.simulador_emprestimo.service.impl;
 
-import java.time.LocalDateTime;
-import java.time.Period;
-import java.util.logging.Logger;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import br.com.creditas.simulador_emprestimo.dto.SimulacaoRequestDTO;
-import br.com.creditas.simulador_emprestimo.dto.SimulacaoResponseDTO;
+import br.com.creditas.simulador_emprestimo.dto.SimulacaoRequestDto;
+import br.com.creditas.simulador_emprestimo.dto.SimulacaoResponseDto;
+import br.com.creditas.simulador_emprestimo.service.ClienteService;
 import br.com.creditas.simulador_emprestimo.service.SimuladorService;
+import br.com.creditas.simulador_emprestimo.service.TaxaJurosService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
+@Slf4j
+@RequiredArgsConstructor
 public class SimuladorServiceImpl implements SimuladorService {
 
-    private static final Logger logger = Logger.getLogger(SimuladorServiceImpl.class.getName());
+    private final ClienteService clienteService;
+    private final TaxaJurosService taxaJurosService;
 
     @Override
-    public SimulacaoResponseDTO simularEmprestimo(SimulacaoRequestDTO request) {
+    public SimulacaoResponseDto simularEmprestimo(SimulacaoRequestDto request) {
 
-        logger.info("Iniciando simulação de empréstimo: " + request);
+        log.info("Iniciando simulação de empréstimo: {}", request);
 
-        int idadeCliente = obterIdadeCliente(request.getDataNascimento());
-        double taxaJurosMensal = obterTaxaJurosMensal(idadeCliente);
-        double valorPresenteComTaxaAplicada = request.getValorSolicitado() * taxaJurosMensal;
-        double divisor = 1 - Math.pow((1 + taxaJurosMensal), -request.getNumeroParcelas());
-        double pmt = valorPresenteComTaxaAplicada / divisor;
-        double valorTotalPago = pmt * request.getNumeroParcelas();
-        double valorTotalJuros = valorTotalPago - request.getValorSolicitado();
+        var simulacaoEmprestimo = request.toModel();
+        int idadeCliente = obterIdadeCliente(simulacaoEmprestimo.getCpfCliente());
+        double taxaJurosMensal = taxaJurosService.buscarTaxaJurosMensalPorIdade(idadeCliente);
+        simulacaoEmprestimo.calcularValoresSimulacao(taxaJurosMensal);
 
-        return new SimulacaoResponseDTO(pmt, valorTotalPago, valorTotalJuros);
+        log.info("Simulação de empréstimo concluída: {}", simulacaoEmprestimo);
+
+        return new SimulacaoResponseDto().fromModel(simulacaoEmprestimo);
     }
 
-    private double obterTaxaJurosMensal(int idadeCliente) {
+    @Async
+    @Override
+    public CompletableFuture<List<SimulacaoResponseDto>> simularEmprestimoLote(List<SimulacaoRequestDto> simulacoes) {
 
-        logger.info("Obtendo taxa de juros mensal para idade do cliente: " + idadeCliente);
+        log.info("Iniciando simulação de lote de empréstimos:");
 
-        if (idadeCliente <= 0) {
-            throw new IllegalArgumentException("Idade do cliente inválida");
-        }
+        return CompletableFuture.supplyAsync(() ->
 
-        double taxaJurosAnual;
-
-        if (idadeCliente <= 25) {
-            taxaJurosAnual = 5L;
-        } else if (idadeCliente <= 40) {
-            taxaJurosAnual = 3L;
-        } else if (idadeCliente <= 60) {
-            taxaJurosAnual = 2L;
-        } else {
-            taxaJurosAnual = 4L;
-        }
-
-        double taxaJurosMensal = taxaJurosAnual / 12;
-
-        logger.info("Taxa de juros mensal obtida: " + taxaJurosMensal);
-
-        return taxaJurosMensal;
+        simulacoes.stream()
+                .map(this::simularEmprestimo)
+                .toList());
     }
 
-    private int obterIdadeCliente(LocalDateTime dataNascimento) {
+    /**
+     * Calcula a idade do cliente com base na data de nascimento.
+     *
+     * @param dataNascimento Data de nascimento do cliente.
+     * @return Idade do cliente em anos.
+     */
+    private int obterIdadeCliente(String cpfCliente) {
 
-        logger.info("Calculando idade do cliente com base na data de nascimento: " + dataNascimento);
+        var cliente = clienteService.buscarClientePorCpf(cpfCliente);
 
-        if (dataNascimento == null) {
+        log.info("Cliente encontrado: {}", cliente);
 
-            throw new IllegalArgumentException("Data de nascimento não pode ser nula");
-        }
+        int idade = cliente.calcularIdadeCliente();
 
-        int idade = Period.between(dataNascimento.toLocalDate(), LocalDateTime.now().toLocalDate()).getYears();
-
-        logger.info("Idade do cliente calculada: " + idade);
+        log.info("Idade do cliente calculada: {}", idade);
 
         return idade;
     }
