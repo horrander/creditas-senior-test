@@ -16,6 +16,7 @@ public class MoedaUtil {
         symbols.setDecimalSeparator(',');
         symbols.setGroupingSeparator('.');
         format.setMaximumFractionDigits(2);
+        format.setMinimumFractionDigits(2);
         format.setDecimalFormatSymbols(symbols);
         String valorArredondado = format.format(valor);
 

@@ -17,7 +17,7 @@ public class TaxaJuros {
      *
      * @return Taxa de juros mensal.
      */
-    public double calcularTaxaJurosMensal() {
+    public Double calcularTaxaJurosMensal() {
 
         return taxaAnual / 12;
     }

@@ -16,7 +16,7 @@ public class TaxaJurosServiceImpl implements TaxaJurosService {
     private final TaxaJurosRepository taxaJurosRepository;
 
     @Override
-    public double buscarTaxaJurosMensalPorIdade(int idade) {
+    public Double buscarTaxaJurosMensalPorIdade(int idade) {
 
         log.info("Buscando taxa de juros para a idade: {}", idade);
 

@@ -8,5 +8,5 @@ public interface TaxaJurosService {
      * @param idade Idade do cliente.
      * @return Taxa de juros encontrada ou null se não existir.
      */
-    public double buscarTaxaJurosMensalPorIdade(int idade);
+    public Double buscarTaxaJurosMensalPorIdade(int idade);
 }
