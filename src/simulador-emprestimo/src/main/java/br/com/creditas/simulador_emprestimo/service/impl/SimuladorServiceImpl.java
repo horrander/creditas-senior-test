@@ -43,6 +43,8 @@ public class SimuladorServiceImpl implements SimuladorService {
 
         log.info("Iniciando simulação de lote de empréstimos:");
 
+        //TODO: Adicionar mecanismo para não interrompera a execução em caso de erro em uma simulação específica
+
         return CompletableFuture.supplyAsync(() ->
 
         simulacoes.stream()
